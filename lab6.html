@@ -1,13 +1,111 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CPIT-405 Lab 6</title>
+
+    <title>Lab 6 | Like or Dislike</title>
+
+    <link rel="stylesheet" href="lab6.css">
 </head>
+
 <body>
-    <h1>Lab 6</h1>
-    <p>Coming soon.</p>
-    <p><a href="index.html">Back to Labs Home</a></p>
+
+    <main class="lab6-container">
+
+        <h1>Lab 6</h1>
+
+        <h2>Like or dislike</h2>
+
+
+        <section class="vote-section">
+
+            <button
+                id="like-button"
+                class="vote-button"
+                type="button"
+            >
+                👍
+                <span id="like-count">0</span>
+            </button>
+
+
+            <button
+                id="dislike-button"
+                class="vote-button"
+                type="button"
+            >
+                👎
+                <span id="dislike-count">0</span>
+            </button>
+
+        </section>
+
+
+        <p id="vote-message" class="message"></p>
+
+
+        <section class="comments-section">
+
+            <h2>Comments</h2>
+
+            <textarea
+                id="comment-input"
+                placeholder="Write a comment..."
+                rows="6"
+            ></textarea>
+
+
+            <div class="comment-buttons">
+
+                <button
+                    id="submit-comment"
+                    type="button"
+                    class="action-button"
+                >
+                    Submit
+                </button>
+
+
+                <button
+                    id="clear-button"
+                    type="button"
+                    class="action-button"
+                >
+                    Clear
+                </button>
+
+            </div>
+
+
+            <p id="comment-message" class="message"></p>
+
+
+            <div id="comments-list">
+
+            </div>
+
+        </section>
+
+
+        <section class="lab-navigation">
+
+            <a href="labs.html">
+                ← Back to Labs
+            </a>
+
+            <a href="index.html">
+                Portfolio Home
+            </a>
+
+        </section>
+
+    </main>
+
+
+    <script src="lab6.js"></script>
+
 </body>
+
 </html>
