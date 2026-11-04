@@ -1,13 +1,93 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CPIT-405 Lab 7</title>
+
+    <title>Lab 7 | Asynchronous JavaScript</title>
+
+    <link rel="stylesheet" href="lab7.css">
 </head>
+
 <body>
-    <h1>Lab 7</h1>
-    <p>Coming soon.</p>
-    <p><a href="index.html">Back to Labs Home</a></p>
+
+    <main class="container">
+
+        <header>
+            <h1>Lab 7</h1>
+
+            <h2>Asynchronous JavaScript</h2>
+
+            <p>
+                Search for photos using three different JavaScript API methods.
+            </p>
+        </header>
+
+
+        <section class="search-section">
+
+            <input
+                type="text"
+                id="search-input"
+                placeholder="Search photos..."
+                value="Makkah"
+            >
+
+
+            <button
+                id="xhr-button"
+                type="button"
+            >
+                Search using XHR
+            </button>
+
+
+            <button
+                id="fetch-button"
+                type="button"
+            >
+                Search using Fetch
+            </button>
+
+
+            <button
+                id="async-button"
+                type="button"
+            >
+                Search using Async/Await
+            </button>
+
+        </section>
+
+
+        <p id="status-message"></p>
+
+
+        <section
+            id="image-gallery"
+            class="image-gallery"
+        >
+        </section>
+
+
+        <section class="lab-navigation">
+
+            <a href="labs.html">
+                ← Back to Labs
+            </a>
+
+            <a href="index.html">
+                Portfolio Home
+            </a>
+
+        </section>
+
+    </main>
+
+
+    <script src="lab7.js"></script>
+
 </body>
+
 </html>
