@@ -1,0 +1,44 @@
+﻿* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+
+  min-width: 320px;
+  min-height: 100vh;
+
+  background:
+    linear-gradient(
+      rgba(116, 247, 232, 0.035) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(116, 247, 232, 0.035) 1px,
+      transparent 1px
+    ),
+    #080d18;
+
+  background-size: 40px 40px;
+
+  color: #f5f7fb;
+
+  font-family:
+    "Courier New",
+    Courier,
+    monospace;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+}
