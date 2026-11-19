@@ -14,42 +14,19 @@ import {
 import "./App.css";
 
 
-const API_KEY_STORAGE = "spoonacularApiKey";
-
-function getApiKey() {
-  let key =
-    sessionStorage.getItem(
-      API_KEY_STORAGE
-    );
-
-  if (!key) {
-    key = window.prompt(
-      "Enter your Spoonacular API Key:"
-    );
-
-    if (key) {
-      sessionStorage.setItem(
-        API_KEY_STORAGE,
-        key.trim()
-      );
-    }
-  }
-
-  return key
-    ? key.trim()
-    : "";
-}
-
-const API_KEY = getApiKey();
 const API_BASE =
   "https://api.spoonacular.com";
 
-function apiOptions() {
-  return {
-    headers: {
-      "x-api-key": API_KEY
-    }
-  };
+const API_KEY_STORAGE =
+  "spoonacularApiKey";
+
+
+function getStoredApiKey() {
+  return (
+    sessionStorage.getItem(
+      API_KEY_STORAGE
+    ) || ""
+  );
 }
 
 
@@ -58,6 +35,12 @@ function apiOptions() {
 // ==========================================
 
 function RecipeSearch() {
+
+  const [apiKey, setApiKey] =
+    useState(getStoredApiKey);
+
+  const [keyInput, setKeyInput] =
+    useState("");
 
   const [query, setQuery] =
     useState("");
@@ -72,23 +55,73 @@ function RecipeSearch() {
     useState("");
 
 
+  function saveApiKey(event) {
+
+    event.preventDefault();
+
+    const key =
+      keyInput.trim();
+
+
+    if (!key) {
+
+      setMessage(
+        "Please enter your Spoonacular API Key."
+      );
+
+      return;
+    }
+
+
+    sessionStorage.setItem(
+      API_KEY_STORAGE,
+      key
+    );
+
+    setApiKey(key);
+
+    setKeyInput("");
+
+    setMessage(
+      "API Key saved for this browser session."
+    );
+  }
+
+
+  function clearApiKey() {
+
+    sessionStorage.removeItem(
+      API_KEY_STORAGE
+    );
+
+    setApiKey("");
+
+    setRecipes([]);
+
+    setMessage(
+      "API Key removed."
+    );
+  }
+
+
   // ========================================
   // useEffect Fetch
-  // Runs when component loads
+  // Runs after API key is available
   // ========================================
 
   useEffect(() => {
 
+    if (!apiKey) {
+
+      setMessage(
+        "Enter your Spoonacular API Key to load recipes."
+      );
+
+      return;
+    }
+
+
     async function loadInitialRecipes() {
-
-      if (!API_KEY) {
-        setMessage(
-          "Spoonacular API key is missing."
-        );
-
-        return;
-      }
-
 
       setLoading(true);
 
@@ -101,29 +134,21 @@ function RecipeSearch() {
 
         const response =
           await fetch(
-            `${API_BASE}/recipes/complexSearch?query=pasta&number=6&apiKey=${encodeURIComponent(API_KEY)}`
+            `${API_BASE}/recipes/complexSearch?query=pasta&number=6&apiKey=${encodeURIComponent(apiKey)}`
           );
 
 
         if (!response.ok) {
 
-          let errorMessage =
-            `HTTP ${response.status}`;
+          const data =
+            await response
+              .json()
+              .catch(() => null);
 
-          try {
-            const errorData =
-              await response.json();
-
-            errorMessage =
-              errorData.message ||
-              errorData.status ||
-              errorMessage;
-          } catch {
-            // Keep HTTP status if response is not JSON.
-          }
 
           throw new Error(
-            errorMessage
+            data?.message ||
+            `HTTP ${response.status}`
           );
         }
 
@@ -143,6 +168,8 @@ function RecipeSearch() {
 
       } catch (error) {
 
+        setRecipes([]);
+
         setMessage(
           "Could not load recipes: " +
           error.message
@@ -157,17 +184,22 @@ function RecipeSearch() {
 
     loadInitialRecipes();
 
-  }, []);
+  }, [apiKey]);
 
-
-  // ========================================
-  // Event-Based Fetch
-  // Runs after user submits search
-  // ========================================
 
   async function handleSearch(event) {
 
     event.preventDefault();
+
+
+    if (!apiKey) {
+
+      setMessage(
+        "Please enter your Spoonacular API Key first."
+      );
+
+      return;
+    }
 
 
     const searchTerm =
@@ -195,13 +227,20 @@ function RecipeSearch() {
 
       const response =
         await fetch(
-          `${API_BASE}/recipes/complexSearch?query=${encodeURIComponent(searchTerm)}&number=9&apiKey=${encodeURIComponent(API_KEY)}`
+          `${API_BASE}/recipes/complexSearch?query=${encodeURIComponent(searchTerm)}&number=9&apiKey=${encodeURIComponent(apiKey)}`
         );
 
 
       if (!response.ok) {
 
+        const data =
+          await response
+            .json()
+            .catch(() => null);
+
+
         throw new Error(
+          data?.message ||
           `HTTP ${response.status}`
         );
       }
@@ -216,21 +255,11 @@ function RecipeSearch() {
       );
 
 
-      if (
-        !data.results ||
-        data.results.length === 0
-      ) {
-
-        setMessage(
-          "No recipes found."
-        );
-
-      } else {
-
-        setMessage(
-          `${data.results.length} recipes found.`
-        );
-      }
+      setMessage(
+        data.results?.length
+          ? `${data.results.length} recipes found.`
+          : "No recipes found."
+      );
 
     } catch (error) {
 
@@ -271,147 +300,212 @@ function RecipeSearch() {
       </section>
 
 
-      <section className="search-panel">
+      {!apiKey && (
 
-        <form
-          onSubmit={handleSearch}
-          className="recipe-search"
-        >
+        <section className="search-panel">
 
-          <label htmlFor="recipe-search">
-            SEARCH RECIPES
-          </label>
+          <form
+            className="recipe-search"
+            onSubmit={saveApiKey}
+          >
+
+            <label htmlFor="api-key">
+              SPOONACULAR API KEY
+            </label>
 
 
-          <div className="search-row">
+            <div className="search-row">
 
-            <input
-              id="recipe-search"
-              type="text"
-              placeholder="Try pasta, pizza, chicken..."
-              value={query}
-              onChange={(event) =>
-                setQuery(
-                  event.target.value
-                )
-              }
-            />
+              <input
+                id="api-key"
+                type="password"
+                placeholder="Paste your API Key here..."
+                value={keyInput}
+                onChange={(event) =>
+                  setKeyInput(
+                    event.target.value
+                  )
+                }
+              />
+
+
+              <button type="submit">
+                SAVE KEY
+              </button>
+
+            </div>
+
+          </form>
+
+
+          <p className="status-message">
+            Your key is stored only in
+            sessionStorage for this browser session.
+          </p>
+
+        </section>
+
+      )}
+
+
+      {apiKey && (
+
+        <>
+
+          <section className="search-panel">
+
+            <form
+              onSubmit={handleSearch}
+              className="recipe-search"
+            >
+
+              <label htmlFor="recipe-search">
+                SEARCH RECIPES
+              </label>
+
+
+              <div className="search-row">
+
+                <input
+                  id="recipe-search"
+                  type="text"
+                  placeholder="Try pasta, pizza, chicken..."
+                  value={query}
+                  onChange={(event) =>
+                    setQuery(
+                      event.target.value
+                    )
+                  }
+                />
+
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                >
+                  {
+                    loading
+                      ? "LOADING..."
+                      : "SEARCH"
+                  }
+                </button>
+
+              </div>
+
+            </form>
+
+
+            <p className="status-message">
+              {message}
+            </p>
 
 
             <button
-              type="submit"
-              disabled={loading}
+              type="button"
+              className="clear"
+              onClick={clearApiKey}
             >
-              {
-                loading
-                  ? "LOADING..."
-                  : "SEARCH"
-              }
+              CHANGE API KEY
             </button>
 
-          </div>
-
-        </form>
+          </section>
 
 
-        <p className="status-message">
-          {message}
-        </p>
+          <section className="recipes-section">
 
-      </section>
+            <div className="section-title">
 
+              <span className="eyebrow">
+                RECIPE DATABASE
+              </span>
 
-      <section className="recipes-section">
+              <h2>
+                Results
+              </h2>
 
-        <div className="section-title">
-
-          <span className="eyebrow">
-            RECIPE DATABASE
-          </span>
-
-          <h2>
-            Results
-          </h2>
-
-        </div>
+            </div>
 
 
-        {
-          recipes.length === 0 &&
-          !loading
-            ? (
+            {
+              recipes.length === 0 &&
+              !loading
+                ? (
 
-              <div className="empty-state">
-                No recipes to display.
-              </div>
+                  <div className="empty-state">
+                    No recipes to display.
+                  </div>
 
-            )
-            : (
+                )
+                : (
 
-              <div className="recipe-grid">
+                  <div className="recipe-grid">
 
-                {
-                  recipes.map(
-                    (recipe) => (
+                    {
+                      recipes.map(
+                        (recipe) => (
 
-                      <article
-                        className="recipe-card"
-                        key={recipe.id}
-                      >
-
-                        {
-                          recipe.image
-                            ? (
-
-                              <img
-                                src={recipe.image}
-                                alt={recipe.title}
-                              />
-
-                            )
-                            : (
-
-                              <div className="image-placeholder">
-                                NO IMAGE
-                              </div>
-
-                            )
-                        }
-
-
-                        <div className="recipe-card-content">
-
-                          <span className="recipe-id">
-                            ID // {recipe.id}
-                          </span>
-
-
-                          <h3>
-                            {recipe.title}
-                          </h3>
-
-
-                          <Link
-                            className="details-link"
-                            to={`/recipe/${recipe.id}`}
+                          <article
+                            className="recipe-card"
+                            key={recipe.id}
                           >
-                            VIEW DETAILS →
-                          </Link>
 
-                        </div>
+                            {
+                              recipe.image
+                                ? (
 
-                      </article>
+                                  <img
+                                    src={recipe.image}
+                                    alt={recipe.title}
+                                  />
 
-                    )
-                  )
-                }
+                                )
+                                : (
 
-              </div>
+                                  <div className="image-placeholder">
+                                    NO IMAGE
+                                  </div>
 
-            )
-        }
+                                )
+                            }
 
-      </section>
+
+                            <div className="recipe-card-content">
+
+                              <span className="recipe-id">
+                                ID // {recipe.id}
+                              </span>
+
+
+                              <h3>
+                                {recipe.title}
+                              </h3>
+
+
+                              <Link
+                                className="details-link"
+                                to={`/recipe/${recipe.id}`}
+                              >
+                                VIEW DETAILS →
+                              </Link>
+
+                            </div>
+
+                          </article>
+
+                        )
+                      )
+                    }
+
+                  </div>
+
+                )
+            }
+
+          </section>
+
+        </>
+
+      )}
 
     </main>
   );
@@ -419,7 +513,7 @@ function RecipeSearch() {
 
 
 // ==========================================
-// Recipe Details Page
+// Recipe Details
 // ==========================================
 
 function RecipeDetails() {
@@ -438,18 +532,18 @@ function RecipeDetails() {
     useState("");
 
 
-  // ========================================
-  // useEffect Fetch Recipe Information
-  // ========================================
-
   useEffect(() => {
+
+    const apiKey =
+      getStoredApiKey();
+
 
     async function loadRecipe() {
 
-      if (!API_KEY) {
+      if (!apiKey) {
 
         setError(
-          "Spoonacular API key is missing."
+          "API Key is missing. Return to Home and enter it again."
         );
 
         setLoading(false);
@@ -462,29 +556,21 @@ function RecipeDetails() {
 
         const response =
           await fetch(
-            `${API_BASE}/recipes/${id}/information?includeNutrition=false&apiKey=${encodeURIComponent(API_KEY)}`
+            `${API_BASE}/recipes/${id}/information?includeNutrition=false&apiKey=${encodeURIComponent(apiKey)}`
           );
 
 
         if (!response.ok) {
 
-          let errorMessage =
-            `HTTP ${response.status}`;
+          const data =
+            await response
+              .json()
+              .catch(() => null);
 
-          try {
-            const errorData =
-              await response.json();
-
-            errorMessage =
-              errorData.message ||
-              errorData.status ||
-              errorMessage;
-          } catch {
-            // Keep HTTP status if response is not JSON.
-          }
 
           throw new Error(
-            errorMessage
+            data?.message ||
+            `HTTP ${response.status}`
           );
         }
 
@@ -556,12 +642,6 @@ function RecipeDetails() {
 
       </main>
     );
-  }
-
-
-  if (!recipe) {
-
-    return null;
   }
 
 
@@ -641,8 +721,7 @@ function RecipeDetails() {
 
 
           {
-            recipe.extendedIngredients &&
-            recipe.extendedIngredients.length > 0
+            recipe.extendedIngredients?.length
               ? (
 
                 <ul>
@@ -651,7 +730,12 @@ function RecipeDetails() {
                     recipe.extendedIngredients.map(
                       (ingredient) => (
 
-                        <li key={ingredient.id + ingredient.original}>
+                        <li
+                          key={
+                            ingredient.id +
+                            ingredient.original
+                          }
+                        >
                           {ingredient.original}
                         </li>
 
@@ -717,7 +801,7 @@ function RecipeDetails() {
 
 
 // ==========================================
-// About Page
+// About
 // ==========================================
 
 function About() {
@@ -734,61 +818,11 @@ function About() {
         Recipe Explorer
       </h1>
 
-
       <p>
-
-        This React application consumes the
-        Spoonacular API using fetch,
-        useState, useEffect, event handling
-        and React Router.
-
+        React application using useState,
+        useEffect, Fetch API,
+        Spoonacular and React Router.
       </p>
-
-
-      <div className="about-grid">
-
-        <article>
-
-          <strong>
-            useState
-          </strong>
-
-          <p>
-            Stores search input,
-            API results and UI state.
-          </p>
-
-        </article>
-
-
-        <article>
-
-          <strong>
-            useEffect
-          </strong>
-
-          <p>
-            Loads recipes and recipe details
-            when components are mounted.
-          </p>
-
-        </article>
-
-
-        <article>
-
-          <strong>
-            Fetch API
-          </strong>
-
-          <p>
-            Retrieves recipe data
-            asynchronously from Spoonacular.
-          </p>
-
-        </article>
-
-      </div>
 
     </main>
   );
@@ -796,7 +830,7 @@ function About() {
 
 
 // ==========================================
-// Application Layout
+// Layout
 // ==========================================
 
 function Layout() {
@@ -834,12 +868,10 @@ function Layout() {
           element={<RecipeSearch />}
         />
 
-
         <Route
           path="/recipe/:id"
           element={<RecipeDetails />}
         />
-
 
         <Route
           path="/about"
@@ -855,6 +887,7 @@ function Layout() {
           CPIT-405 // 2310505
         </span>
 
+
         <div className="footer-links">
 
           <a
@@ -866,6 +899,7 @@ function Layout() {
           >
             ← BACK TO LABS
           </a>
+
 
           <a
             href={
@@ -891,16 +925,11 @@ function App() {
   return (
 
     <HashRouter>
-
       <Layout />
-
     </HashRouter>
+
   );
 }
 
 
 export default App;
-
-
-
-
