@@ -1,0 +1,33 @@
+﻿/*
+Student Name: Taghreed Mohammed Almalki
+Student ID: 2310505
+Course: CPIT-405
+Lab 10
+*/
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 30px;
+    background-color: #f5f5f5;
+}
+
+h1,
+h2 {
+    color: #222;
+}
+
+table {
+    border-collapse: collapse;
+    background-color: white;
+}
+
+th,
+td {
+    padding: 10px;
+}
+
+input,
+button {
+    padding: 6px;
+    margin: 4px;
+}
